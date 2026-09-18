@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="CustomAgent.AppHost/CustomAgent.AppHost.csproj" />
+  <Project Path="customagent.client/customagent.client.esproj">
+    <Build />
+  </Project>
+  <Project Path="CustomAgent.Server/CustomAgent.Server.csproj" />
+  <Project Path="CustomAgent.ServiceDefaults/CustomAgent.ServiceDefaults.csproj" />
+</Solution>

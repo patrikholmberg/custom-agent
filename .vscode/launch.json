@@ -1,0 +1,61 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "CustomAgent.Server (https)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/CustomAgent.Server/bin/Debug/net10.0/CustomAgent.Server.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/CustomAgent.Server",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://localhost:7242;http://localhost:5106",
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "uriFormat": "https://localhost:55354",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      }
+    },
+    {
+      "name": "CustomAgent.Server (http)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/CustomAgent.Server/bin/Debug/net10.0/CustomAgent.Server.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/CustomAgent.Server",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5106",
+      }
+    },
+    {
+      "type": "aspire",
+      "request": "launch",
+      "name": "CustomAgent.AppHost",
+      "program": "${workspaceFolder}/src/CustomAgent.AppHost"
+    },
+    {
+      "name": "Attach to customagent-server",
+      "type": "coreclr",
+      "request": "attach",
+      "processName": "CustomAgent.Server.exe",
+      "preLaunchTask": "wait-for-customagent-server"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "CustomAgent.AppHost (debug server)",
+      "configurations": ["CustomAgent.AppHost", "Attach to customagent-server"],
+      "stopAll": true
+    }
+  ]
+}

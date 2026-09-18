@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "CustomAgent.AppHost/CustomAgent.AppHost.csproj"
+  }
+}

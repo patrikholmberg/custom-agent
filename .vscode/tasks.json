@@ -1,0 +1,83 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/CustomAgent.Server/CustomAgent.Server.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "publish",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "publish",
+        "${workspaceFolder}/src/CustomAgent.Server/CustomAgent.Server.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "watch",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/src/CustomAgent.Server/CustomAgent.Server.csproj"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build-apphost",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/CustomAgent.AppHost/CustomAgent.AppHost.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "watch-apphost",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/src/CustomAgent.AppHost/CustomAgent.AppHost.csproj"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "wait-for-customagent-server",
+      "command": "powershell",
+      "type": "process",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "$deadline = (Get-Date).AddSeconds(120); while (-not (Get-Process -Name 'CustomAgent.Server' -ErrorAction SilentlyContinue)) { if ((Get-Date) -gt $deadline) { Write-Error 'Timed out waiting for CustomAgent.Server to start.'; exit 1 }; Start-Sleep -Milliseconds 500 }"
+      ],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    }
+  ]
+}
