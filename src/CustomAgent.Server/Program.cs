@@ -1,8 +1,10 @@
 using CustomAgent.Server.Tools;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Azure;
+using Azure.AI.OpenAI;
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
+using OllamaSharp;
+using System.ClientModel.Primitives;
 
 namespace CustomAgent.Server;
 
@@ -19,31 +21,50 @@ public class Program
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
-        var kernelBuilder = builder.Services.AddKernel();
+        IList<AITool> tools =
+        [
+            AIFunctionFactory.Create(new GetDateTime().GetCurrentDateTime, "get_current_date_time"),
+            AIFunctionFactory.Create(new WriteToDisk().WriteContentToFile, "write_content_to_file"),
+        ];
 
-        kernelBuilder.Plugins.AddFromType<GetDateTime>();
-
-        builder.Services.AddSingleton<IChatCompletionService>(serviceProvider =>
+        builder.Services.AddKeyedSingleton<IChatClient>("azure", (serviceProvider, _) =>
         {
             var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 
             var httpClient = httpClientFactory.CreateClient("AzureOpenAI");
 
-            return new AzureOpenAIChatCompletionService(
-                deploymentName: builder.Configuration.GetValue<string>("AzureOpenAI:DeploymentName")!,
-                endpoint: builder.Configuration.GetValue<string>("AzureOpenAI:Endpoint")!,
-                apiKey: builder.Configuration.GetValue<string>("AzureOpenAI:Key")!,
-                httpClient: httpClient);
+            var client = new AzureOpenAIClient(
+                new Uri(builder.Configuration.GetValue<string>("AzureOpenAI:Endpoint")!),
+                new AzureKeyCredential(builder.Configuration.GetValue<string>("AzureOpenAI:Key")!),
+                new AzureOpenAIClientOptions { Transport = new HttpClientPipelineTransport(httpClient) });
+
+            return client
+                .GetChatClient(builder.Configuration.GetValue<string>("AzureOpenAI:DeploymentName")!)
+                .AsIChatClient();
         });
 
-        FunctionChoiceBehaviorOptions options = new() { AllowConcurrentInvocation = true };
+        builder.Services.AddKeyedSingleton<IChatClient>("ollama", (serviceProvider, _) =>
+            new OllamaApiClient(
+                new Uri(builder.Configuration.GetValue<string>("ollama:Endpoint")!),
+                builder.Configuration.GetValue<string>("ollama:Model")!));
 
-
-        builder.Services.AddTransient<PromptExecutionSettings>(_ => new OpenAIPromptExecutionSettings
+        foreach (var key in new[] { "azure", "ollama" })
         {
-            //Temperature = 0.75,
-            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(options: options)
-        });
+            builder.Services.AddKeyedSingleton<AIAgent>(key, (serviceProvider, _) =>
+                serviceProvider.GetRequiredKeyedService<IChatClient>(key).AsAIAgent(
+                    new ChatClientAgentOptions
+                    {
+                        Name = "CustomAgent",
+                        AllowConcurrentInvocation = true,
+                        ChatOptions = new ChatOptions
+                        {
+                            //Temperature = 0.75f,
+                            Tools = tools
+                        }
+                    },
+                    serviceProvider.GetRequiredService<ILoggerFactory>(),
+                    serviceProvider));
+        }
 
 
         builder.Services.AddHttpClient("AzureOpenAI", (servicesProvider, client) =>

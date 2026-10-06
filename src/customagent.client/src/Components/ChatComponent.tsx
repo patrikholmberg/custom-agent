@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import ChatHistory from "./ChatHistory";
 import Form, { type FormHandle } from "./Form";
 import TextArea from "./TextArea";
@@ -19,6 +19,7 @@ export default function ChatComponent() {
   const status = useAppSelector(selectChatStatus);
   const chatHistory = useAppSelector(selectChatHistory);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [draft, setDraft] = useState("");
 
   const dispatch = useAppDispatch();
 
@@ -28,6 +29,7 @@ export default function ChatComponent() {
     };
     const systemPrompt = systemPromptRef.current!.value;
     formRef.current!.clear();
+    setDraft("");
     dispatch(setStatus("updating"));
     dispatch(
       addMessage({
@@ -47,11 +49,13 @@ export default function ChatComponent() {
         dispatch(
           addMessageChunk({ reference: chunk.Reference, chunk: chunk.Chunk }),
         );
-        messagesEndRef.current!.scrollIntoView({ behavior: "smooth" });
       },
     ).finally(() => {
       dispatch(setStatus("idle"));
     });
+  }
+  function handleReveal() {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
   }
   function handleReset() {}
   return (
@@ -66,12 +70,13 @@ export default function ChatComponent() {
         <button onClick={handleReset}>Reset Chat</button>
       </div>
       <div className="main">
-        <ChatHistory />
+        <ChatHistory draft={draft} onReveal={handleReveal} />
         <Form className="message-form" onPost={handlePost} ref={formRef}>
           <TextArea
             id="message"
             label="Message"
             className="textarea-component"
+            onChange={(e) => setDraft(e.target.value)}
           />
           <button disabled={status === "updating"}>Post message</button>
         </Form>

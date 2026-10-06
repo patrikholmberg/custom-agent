@@ -1,8 +1,7 @@
-﻿using System.ClientModel;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Agents.AI;
+using System.ClientModel;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace CustomAgent.Server.Controllers;
 
@@ -10,12 +9,10 @@ namespace CustomAgent.Server.Controllers;
 [Route("api/[controller]")]
 public class ChatController : ControllerBase
 {
-    private readonly Kernel _kernel;
-    private readonly PromptExecutionSettings _promptExecutionSettings;
-    public ChatController(Kernel kernel, PromptExecutionSettings promptExecutionSettings)
+    private readonly AIAgent _agent;
+    public ChatController([FromKeyedServices("azure")] AIAgent agent)
     {
-        _kernel = kernel;
-        _promptExecutionSettings = promptExecutionSettings;
+        _agent = agent;
     }
     [HttpPost("stream")]
     public async Task Stream([FromBody] ChatRequestModel model, CancellationToken cancellationToken)
@@ -30,19 +27,38 @@ public class ChatController : ControllerBase
 
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(120));
 
-        var chatService = _kernel.GetRequiredService<IChatCompletionService>();
-
-        var history = model.ToChatHistory();
+        var messages = model.ToChatMessages();
         try
         {
-            await foreach (var chunk in chatService.GetStreamingChatMessageContentsAsync(history, _promptExecutionSettings, _kernel, timeoutCts.Token))
+            //var response = await chatService.GetChatMessageContentAsync(history, _promptExecutionSettings, _kernel);
+            //var payload = JsonSerializer.Serialize(new ChatStreamingResponseModel
+            //{
+            //    Reference = reference,
+            //    Chunk = response.Content!
+            //});
+            //await Response.WriteAsync($"data: {payload}\n\n", timeoutCts.Token);
+            //await Response.Body.FlushAsync(timeoutCts.Token);
+
+            //var endMessage = JsonSerializer.Serialize(new ChatStreamingResponseModel
+            //{
+            //    Reference = reference,
+            //    LastChunk = true
+            //});
+            //await Response.WriteAsync(
+            //    $"data: {endMessage}\n\n",
+            //    cancellationToken);
+
+            //await Response.Body.FlushAsync(
+            //    cancellationToken);
+
+            await foreach (var update in _agent.RunStreamingAsync(messages, cancellationToken: timeoutCts.Token))
             {
-                if (chunk.Content is not null)
+                if (!string.IsNullOrEmpty(update.Text))
                 {
                     var payload = JsonSerializer.Serialize(new ChatStreamingResponseModel
                     {
                         Reference = reference,
-                        Chunk = chunk.Content
+                        Chunk = update.Text
                     });
                     await Response.WriteAsync($"data: {payload}\n\n", timeoutCts.Token);
                     await Response.Body.FlushAsync(timeoutCts.Token);

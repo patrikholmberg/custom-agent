@@ -1,12 +1,10 @@
 using System.ComponentModel;
-using Microsoft.SemanticKernel;
 
 namespace CustomAgent.Server.Tools;
 
 public class GetDateTime
 {
-    [KernelFunction("get_current_date_time")]
-    [Description("Get my current date and time with time zone")]
+    [Description("date time formatted as dddd, MMMM dd, yyyy HH:mm:ss zzz")]
     [return: Description("date time formatted as dddd, MMMM dd, yyyy HH:mm:ss zzz")]
     public string GetCurrentDateTime()
     {

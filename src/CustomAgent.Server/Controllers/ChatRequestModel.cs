@@ -1,5 +1,4 @@
-﻿using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
+﻿using Microsoft.Extensions.AI;
 
 namespace CustomAgent.Server.Controllers
 {
@@ -9,23 +8,22 @@ namespace CustomAgent.Server.Controllers
         {
 
         }
-        public IList<ChatMessage> ChatHistory { get; set; } = [];
+        public IList<ChatMessageModel> ChatHistory { get; set; } = [];
         public string SystemPrompt { get; set; } = string.Empty;
         public string MessagePrompt { get; set; } = string.Empty;
 
-        public ChatHistory ToChatHistory()
+        public List<ChatMessage> ToChatMessages()
         {
-            var history = new ChatHistory(
+            return
                 [
-                    new ChatMessageContent(AuthorRole.System, SystemPrompt),
-                    .. ChatHistory.Select(x => new ChatMessageContent(x.Role == "User" ? AuthorRole.User : AuthorRole.Assistant, x.Content)),
-                    new ChatMessageContent(AuthorRole.User, MessagePrompt)
-                ]);
-            return history;
+                    new ChatMessage(ChatRole.System, SystemPrompt),
+                    .. ChatHistory.Select(x => new ChatMessage(x.Role == "User" ? ChatRole.User : ChatRole.Assistant, x.Content)),
+                    new ChatMessage(ChatRole.User, MessagePrompt)
+                ];
         }
     }
 
-    public class ChatMessage
+    public class ChatMessageModel
     {
         public string Role { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
