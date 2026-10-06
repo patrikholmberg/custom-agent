@@ -1,9 +1,14 @@
 ﻿#root {
-    max-width: 1280px;
-    margin: 0 auto;
-    /*padding: 2rem;*/
-    height: 100vh;
-    text-align: center;
+    width: 100%;
+    max-width: none;
+    min-height: 100svh;
+    margin: 0;
+    border: none;
+    text-align: left;
+}
+
+body {
+    background: #050a05;
 }
 
 th, td {

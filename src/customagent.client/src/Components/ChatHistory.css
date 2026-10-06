@@ -5,11 +5,10 @@
     --terminal-padding: 24px;
 
     position: relative;
+    z-index: 0;
     box-sizing: border-box;
     width: 100%;
-    max-width: calc(80ch + 2 * var(--terminal-padding));
-    min-height: 24em;
-    margin: 20px auto;
+    min-height: 100svh;
     padding: var(--terminal-padding);
     overflow-x: hidden;
 
@@ -20,19 +19,25 @@
     text-align: left;
     color: var(--terminal-fg);
     text-shadow: 0 0 4px rgba(51, 255, 102, 0.55);
-    background: radial-gradient(ellipse at center, #0b170b 0%, var(--terminal-bg) 100%);
-    border: 2px solid #1b2a1b;
-    border-radius: 12px;
-    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.9), 0 0 18px rgba(51, 255, 102, 0.12);
+    background: var(--terminal-bg);
 }
 
-/* Scanlines */
+/* Screen glow and scanlines stay put while the history scrolls underneath */
+.terminal::before,
 .terminal::after {
     content: "";
-    position: absolute;
+    position: fixed;
     inset: 0;
     pointer-events: none;
-    border-radius: inherit;
+}
+
+.terminal::before {
+    z-index: -1;
+    background: radial-gradient(ellipse at center, #0b170b 0%, var(--terminal-bg) 100%);
+}
+
+.terminal::after {
+    box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.9);
     background: repeating-linear-gradient(
         to bottom,
         rgba(0, 0, 0, 0) 0,
@@ -101,7 +106,27 @@ ul.chat-history li.user .message {
 }
 
 ul.chat-history li.prompt .message {
-    white-space: pre-wrap;
+    display: flex;
+}
+
+ul.chat-history li.prompt .prompt-input {
+    flex: 1;
+    display: block;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    resize: none;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    text-shadow: inherit;
+    caret-color: var(--terminal-fg);
+    caret-shape: block;
 }
 
 ul.chat-history li.user .message::before {

@@ -12,6 +12,9 @@ export type Message = {
     reference: string;
     role: AuthorRole;
     content: string;
+    // Local messages (client commands and their output) are shown in the
+    // terminal but never sent to the agent as chat history.
+    local?: boolean;
 }
 export type FormattedMessage = Message & {
     formattedMessage: string;

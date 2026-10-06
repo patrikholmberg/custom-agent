@@ -110,22 +110,6 @@ code {
   background: var(--code-bg);
 }
 
-.textarea-component{
-    width:100%;
-    border-radius: 8px;
-    background-color: var(--bg);
-    height:60px;
-    
-    margin:0;
-    padding:10px;
-    box-sizing: border-box;
-    padding:10px;
-    resize:vertical;
-}
-.input-component{
-  width:100%;
-  text-align:left;
-}
 button{
     width:100%;
     border-radius:8px;

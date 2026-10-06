@@ -1,12 +1,10 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import ChatHistory from "./ChatHistory";
-import Form, { type FormHandle } from "./Form";
-import TextArea from "./TextArea";
 import {
   addMessage,
   addMessageChunk,
+  clearHistory,
   selectChatHistory,
-  selectChatStatus,
   setStatus,
 } from "../Slices/chatSlice";
 import { useAppDispatch, useAppSelector } from "../Store/hooks";
@@ -14,27 +12,74 @@ import { postChatMessage, type Chunk } from "../Services/chatService";
 import "./ChatComponent.css";
 
 export default function ChatComponent() {
-  const formRef = useRef<FormHandle>(null);
-  const systemPromptRef = useRef<HTMLTextAreaElement>(null);
-  const status = useAppSelector(selectChatStatus);
   const chatHistory = useAppSelector(selectChatHistory);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const [draft, setDraft] = useState("");
+  const [systemPrompt, setSystemPrompt] = useState("");
 
   const dispatch = useAppDispatch();
 
-  function handlePost(data: unknown) {
-    const extractedData = data as {
-      message: string;
-    };
-    const systemPrompt = systemPromptRef.current!.value;
-    formRef.current!.clear();
-    setDraft("");
+  function printLocal(command: string, output?: string) {
+    dispatch(
+      addMessage({
+        role: "User",
+        content: command,
+        reference: crypto.randomUUID(),
+        local: true,
+      }),
+    );
+    if (output) {
+      dispatch(
+        addMessage({
+          role: "Assistant",
+          content: output,
+          reference: crypto.randomUUID(),
+          local: true,
+        }),
+      );
+    }
+  }
+
+  // Commands start with a slash and are handled by the client, never sent to
+  // the agent.
+  function handleCommand(input: string) {
+    const [, name, args = ""] = input.match(/^\/(\S*)\s*([\s\S]*)$/)!;
+    switch (name.toLowerCase()) {
+      case "clear":
+        dispatch(clearHistory());
+        break;
+      case "systemprompt": {
+        const prompt = args.trim();
+        if (prompt) {
+          setSystemPrompt(prompt);
+          printLocal(input, "System prompt updated.");
+        } else {
+          printLocal(
+            input,
+            systemPrompt
+              ? `Current system prompt:\n\n${systemPrompt}`
+              : "No system prompt set. Use `/systemprompt <prompt>` to set one.",
+          );
+        }
+        break;
+      }
+      default:
+        printLocal(
+          input,
+          `Unknown command \`/${name}\`. Available commands: \`/systemprompt <prompt>\`, \`/clear\`.`,
+        );
+    }
+  }
+
+  function handlePost(message: string) {
+    if (message.startsWith("/")) {
+      handleCommand(message);
+      return;
+    }
+
     dispatch(setStatus("updating"));
     dispatch(
       addMessage({
         role: "User",
-        content: extractedData.message,
+        content: message,
         reference: crypto.randomUUID(),
       }),
     );
@@ -42,8 +87,10 @@ export default function ChatComponent() {
     postChatMessage(
       {
         systemPrompt: systemPrompt,
-        messagePrompt: extractedData.message,
-        chatHistory: [...chatHistory],
+        messagePrompt: message,
+        chatHistory: chatHistory
+          .filter((item) => !item.local)
+          .map(({ role, content }) => ({ role, content })),
       },
       (chunk: Chunk) => {
         dispatch(
@@ -54,34 +101,10 @@ export default function ChatComponent() {
       dispatch(setStatus("idle"));
     });
   }
-  function handleReveal() {
-    messagesEndRef.current?.scrollIntoView({ block: "end" });
-  }
-  function handleReset() {}
+
   return (
     <section className="chat-component">
-      <div className="sidebar">
-        <TextArea
-          className="textarea-component"
-          id="systemPrompt"
-          label="System Prompt"
-          ref={systemPromptRef}
-        />
-        <button onClick={handleReset}>Reset Chat</button>
-      </div>
-      <div className="main">
-        <ChatHistory draft={draft} onReveal={handleReveal} />
-        <Form className="message-form" onPost={handlePost} ref={formRef}>
-          <TextArea
-            id="message"
-            label="Message"
-            className="textarea-component"
-            onChange={(e) => setDraft(e.target.value)}
-          />
-          <button disabled={status === "updating"}>Post message</button>
-        </Form>
-        <div ref={messagesEndRef} className="end-of-message" />
-      </div>
+      <ChatHistory onSubmit={handlePost} />
     </section>
   );
 }

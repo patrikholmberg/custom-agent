@@ -48,7 +48,8 @@
       "type": "coreclr",
       "request": "attach",
       "processName": "CustomAgent.Server.exe",
-      "preLaunchTask": "wait-for-customagent-server"
+      "preLaunchTask": "wait-for-customagent-server",
+      "launchWebBrowser": false
     }
   ],
   "compounds": [
