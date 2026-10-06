@@ -1,8 +1,5 @@
 .terminal {
-    --terminal-fg: #33ff66;
-    --terminal-dim: #1fa347;
-    --terminal-bg: #050a05;
-    --terminal-padding: 24px;
+    
 
     position: relative;
     z-index: 0;
@@ -12,14 +9,14 @@
     padding: var(--terminal-padding);
     overflow-x: hidden;
 
-    font-family: "Courier New", Consolas, ui-monospace, monospace;
-    font-size: 15px;
+    font-family: "Cascadia Code", Consolas, ui-monospace, monospace;
+    /* font-size: 15px; */
     line-height: 1.4;
     letter-spacing: 0;
     text-align: left;
     color: var(--terminal-fg);
     text-shadow: 0 0 4px rgba(51, 255, 102, 0.55);
-    background: var(--terminal-bg);
+    background: var(--code-bg);
 }
 
 /* Screen glow and scanlines stay put while the history scrolls underneath */
@@ -37,12 +34,12 @@
 }
 
 .terminal::after {
-    box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.9);
+    box-shadow: inset 0 0 130px rgba(0, 0, 0, 1);
     background: repeating-linear-gradient(
         to bottom,
         rgba(0, 0, 0, 0) 0,
-        rgba(0, 0, 0, 0) 2px,
-        rgba(0, 0, 0, 0.25) 3px
+        rgba(0, 0, 0, 0.1) 3px,
+        rgba(0, 0, 0, 0.25) 5px
     );
 }
 
@@ -57,15 +54,10 @@ ul.chat-history li {
     margin: 0 0 1em;
     overflow-wrap: anywhere;
 }
-
-/* Markdown output inherits the terminal look instead of the page styles */
-.terminal .message * {
-    /*font: inherit;*/
-    color: inherit;
-    letter-spacing: inherit;
-    background: none;
+ul.chat-history li.user,
+ul.chat-history li.assistant {
+    margin: 0 0 1.5em;
 }
-
 .terminal .message p,
 .terminal .message h1,
 .terminal .message h2,
